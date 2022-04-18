@@ -7,7 +7,6 @@ import time
 
 from sqlite3 import Error
 
-
 def create_connection(path):
 
     connection = None
@@ -42,7 +41,8 @@ CREATE TABLE IF NOT EXISTS cabos (
   material INTEGER NOT NULL,
   section INTEGER NOT NULL,
   perfil INTEGER NOT NULL,
-  conductors INTEGER NOT NULL
+  conductors INTEGER NOT NULL,
+  maxcurrent INTEGER NOT NULL
 );
 """
 execute_query(connection, create_users_table)  
@@ -51,11 +51,11 @@ execute_query(connection, create_users_table)
 
 create_users = """
 INSERT INTO
-  cabos (material, section, perfil, conductors)
+  cabos (material, section, perfil, conductors, maxcurrent)
 VALUES
-  (1, 90, 1, 1),
-  (0, 40, 1, 1),
-  (1, 45, 1, 3);
+  (1, 90, 1, 1, 125),
+  (0, 40, 1, 1, 200),
+  (1, 45, 1, 3, 100);
 """
 
 execute_query(connection, create_users)
@@ -81,22 +81,43 @@ def execute_read_query(connection, query):
 menu_options = {
     1: 'Exit',
     2: 'Ver tabela',
-    3: 'Calculo de secção',
+    3: 'Calculo de secção em regime permanente',
     4: 'Adicionar itens',
+    5: 'Adicionar cabo para calculo',
+    6: 'Calculo de secção em cc',
 }
+class cabolist:
+    def __init__(self, id, material, section, perfil, conductors, maxcurrent): 
+        self.id = id
+        self.material = material
+        self.section = section
+        self.perfil = perfil
+        self.conductors = conductors
+        self.maxcurrent = maxcurrent
+
+db_cabo_list = []
 
 class cabo:
-    def __init__(self): 
-        self.U = int(input('Qual o nivel de tensao: '))
-        self.Scc = int(input('Qual a potencia de cc: '))
-        self.S = int(input('Qual a potencia nominal: '))
-        self.Perf = int(input('Qual o perfil: '))
-        self.Disp = int(input('Qual a disposicao: '))
-        self.Cond = int(input('Quantos condutores: '))
-        self.Mat = int(input('Qual o material (0 - Cu,  1 - Al, 2 - Cu pintado, 3 - Al pintado): '))
-        self.D = int(input('Qual a distãncia: '))
-        self.Is = self.S / ( 1.732 * self.U )
+    def __init__(self, U, Scc, S, Perf, Disp, Cond, Mat, D, t_cc): 
+        
+        #depois mudar isso
 
+        self.U = U
+        self.Scc = Scc 
+        self.S = S
+        self.Perf = Perf
+        self.Disp = Disp
+        self.Cond = Cond
+        self.Mat = Mat
+        self.D = D
+        self.t_cc = t_cc
+
+
+        self.Is = self.S / ( 1.732 * self.U )
+        self.Icc = self.Scc / ( 1.732 * self.U )
+
+meu_cabo = cabo(1,1,1,1,1,1,1,1,1)
+flag = 1 #IMPORTANTE MUDAR DEPOIS
 
 def fator_ar(iz, delta1, delta2):
     return iz * math.sqrt(delta1/delta2) 
@@ -140,38 +161,123 @@ def option2():
     print("\n\n")
 
 def option3():
+    
+    if flag:
+        print('\n Definiu um cabo \n')
+    else:
+        option5()
+
+    
+
+    # search cables in database
+    select_cabos = "SELECT * FROM cabos WHERE perfil = "+ str(meu_cabo.Perf) +" AND material = "+ str(meu_cabo.Mat) +""
+    cabos = execute_read_query(connection, select_cabos)
+    i=0
+    cabo_select = []
+    for cabos in cabos:
+        cabo_select.append(str(cabos))
+        i=i+1
+    for i in range(len(cabo_select)):
+        word = cabo_select[i].split()
+        for y in range(len(word)):
+            word[y]=word[y].replace("(","")
+            word[y]=word[y].replace(",","")
+            word[y]=word[y].replace(")","")
+        id=word[0]
+        material= int(word[1])
+        section = int(word[2])
+        perfil = int(word[3])
+        conductor = int(word[4])
+        maxcurrent = int(word[5])
+        temp = cabolist(id, material, section, perfil, conductor, maxcurrent)
+        if temp.maxcurrent > meu_cabo.Is:
+            db_cabo_list.append(temp)
+
+    # the one with less section
+    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
+    print("Cabo de menor secção que cumpre as especificações: ", smallest.id)
+    # Fim Contas regime permanente
+    print("\n\n")
+
+def option5():
     # Entrada de dados
-    meu_cabo  = cabo() 
+    U = int(input('Qual o nivel de tensao: '))
+    Scc = int(input('Qual a potencia de cc: '))
+    S = int(input('Qual a potencia nominal: '))
+    Perf = int(input('Qual o perfil: '))
+    Disp = int(input('Qual a disposicao: '))
+    Cond = int(input('Quantos condutores: '))
+    Mat = int(input('Qual o material (0 - Cu,  1 - Al, 2 - Cu pintado, 3 - Al pintado): '))
+    D = int(input('Qual a distãncia: '))
+    t_cc = int(input('Qual o tempo do cc: '))
+    temp  = cabo(U, Scc, S, Perf, Disp, Cond, Mat, D, t_cc) 
     # Fim da entrada de dados
 
     # Fase 2 - bersão base - Contas regime permanente
-    delta1=1
-    delta2=1
+    delta2=35
     teta1=1
-    teta2=1
+    teta2=1 #IMPORTANTE corrigir ar
     h=0
     permanente = int(input('Tem condições diferentes da padrao (1 se sim e 0 se não): '))
     if permanente == 1:
         h =int(input('Qual a altitude: ')) # colocar outras correções
-    
-    
-    select_cabos = "SELECT * FROM cabos WHERE perfil = "+ str(meu_cabo.Perf) +" AND material = "+ str(meu_cabo.Mat) +""
-    cabos = execute_read_query(connection, select_cabos)
-    for cabos in cabos:
-        print(cabos)
-    print(select_cabos)
+        delta1 =int(input('Qual a temperatura: ')) # colocar outras correções
+        temp.Is = fator_ar(temp.Is, delta1, delta2)
+        temp.Is = fator_temp(temp.Is, teta1, teta2)
+        temp.Is = fator_alt(temp.Is, h)
+    global meu_cabo 
+    global flag
+    meu_cabo = temp
+    flag = 1
+
+def option6():
+    if flag:
+        print('\n Definiu um cabo \n')
+    else:
+        option5()
+
     print("\n\n")
-    for i in cabos:
-        print(i)
-    print("\n\n")
-    iz = 100
+    if (meu_cabo.Mat == 0) | (meu_cabo.Mat == 2):
+        #Cobre
+        teta_ini = 65
+        teta_fim = 200
+        teta = teta_fim -  teta_ini
+        k_linha = 148
+        p_esp = 8.9
+    elif (meu_cabo.Mat == 1) | (meu_cabo.Mat == 3):
+        #Aluminio
+        teta_ini = 65
+        teta_fim = 150
+        teta = teta_fim -  teta_ini
+        k_linha = 76
+        p_esp = 2.6
+    else:
+        print("Cabo configurado erradamente, volte a configurar")
+        return 0
+    
+    print(teta, meu_cabo.t_cc)
+    # PRECISO DE AJUDA
+    if meu_cabo.t_cc >0 & meu_cabo.t_cc< 0.015: 
+        n=1
+    elif meu_cabo.t_cc >0.015 & meu_cabo.t_cc< 0.02:
+        n=0.96
+    else:
+        n=0.6
 
-    iz = fator_ar(iz, delta1, delta2)
-    iz = fator_temp(iz, teta1, teta2)
-    iz = fator_alt(iz, h)
+    if meu_cabo.t_cc >0 & meu_cabo.t_cc< 0.015: 
+        m=1.6
+    elif meu_cabo.t_cc >0.015 & meu_cabo.t_cc< 0.02:
+        m=1.5
+    else:
+        m=0.01
 
-    # Fim Contas regime permanente
+    Ith = meu_cabo.Icc * math.sqrt(m+n)
 
+    Sec_min_cc = Ith*math.sqrt(meu_cabo.t_cc)/k_linha
+    for i in range(len(db_cabo_list)):
+        if db_cabo_list[i].section < Sec_min_cc:
+            db_cabo_list.remove(db_cabo_list[i])
+    # pra cada valor de db_cabo_list precisa ver se é maior do que a secção
 
 if __name__=='__main__':
     while(True):
@@ -191,6 +297,11 @@ if __name__=='__main__':
             option3()
         elif option == 4:
             option4()
+        elif option == 5:
+            option5()
+        elif option == 6:
+            option3()
+            option6()
         else:
             print('Invalid option. Please enter a number between 1 and 4.')
 
