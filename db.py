@@ -1,5 +1,5 @@
 
-from re import L
+from re import A, L
 import sqlite3
 import math
 import random
@@ -86,7 +86,7 @@ menu_options = {
     1: 'Exit',
     2: 'Ver tabela',
     3: 'Calculo de secção em regime permanente',
-    4: 'Adicionar itens',
+    4: 'Calcular Ressonancia mecânica',
     5: 'Adicionar cabo para calculo',
     6: 'Calculo de secção em cc',
 }
@@ -104,6 +104,25 @@ class cabolist:
 
 db_cabo_list = []
 
+def show_cable(cable):
+    #Apresentação de resultado 
+    #PRECISO DE AJUDA
+    print("Cabo de menor secção que cumpre as especificações: ")
+    print("id = ", cable.id)
+    if cable.material == 0:
+        print("Material = Cobre não pintado")
+    elif cable.material == 1:
+        print("Material = Aluminio não pintado")
+
+    print("Section = ", cable.section)
+    print("Perfil = ", cable.perfil)
+    print("Nº Conductors = ", cable.conductors)
+    print("Max current in the cable = ", cable.maxcurrent)
+    print("Tabela onde esta = ", cable.tabela)
+    print("Peso/km = ", cable.peso)
+    print("diâmetro = ", cable.diametro)
+    # Fim da Apresentação de resultado
+
 class cabo:
     def __init__(self, U, Scc, S, Perf, Disp, Cond, Mat, a, t_cc, l, sigma): 
         
@@ -120,9 +139,12 @@ class cabo:
         self.t_cc = t_cc
         self.l = l
         self.sigma = sigma
+        self.X = 1.8
 
         self.Is = self.S / ( 1.732 * self.U )
         self.Icc = self.Scc / ( 1.732 * self.U )
+        self.ich = self.X * 1.414 * self.Icc
+        self.fe=2.04*0.01*self.ich*self.ich*self.l/self.a
 
 meu_cabo = cabo(1,1,1,5,1,1,0,1,1,1,1)
 flag = 1 #IMPORTANTE MUDAR DEPOIS
@@ -151,7 +173,22 @@ def print_menu():
         print (key, '--', menu_options[key] )
 
 def option4():
-    f=1
+    E = 1.2 * 1000000
+    I = 0 #AJUDA DA MARGARIDA
+    p = 0 #AJUDA DA MARGARIDA
+    l = 0 #AJUDA DA MARGARIDA
+    
+    for i in range(len(db_cabo_list)):
+        fo = 112 * math.sqrt((E*I)/(p*l*l*l*l))
+        if db_cabo_list[i].section < Sec_min_cc:
+            db_cabo_list.remove(db_cabo_list[i])
+
+    # the one with less section
+    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
+
+    #Apresentação de resultado
+    print("RESSONANCIA:") 
+    show_cable(smallest)
 
 def option2():
     select_cabos = "SELECT * from cabos"
@@ -201,23 +238,10 @@ def option3():
     # the one with less section
     smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
 
-    #Apresentação de resultado 
-    #PRECISO DE AJUDA
-    print("Cabo de menor secção que cumpre as especificações: ")
-    print("id = ", smallest.id)
-    if smallest.material == 0:
-        print("Material = Cobre não pintado")
-    elif smallest.material == 1:
-        print("Material = Aluminio não pintado")
-
-    print("Section = ", smallest.section)
-    print("Perfil = ", smallest.perfil)
-    print("Nº Conductors = ", smallest.conductors)
-    print("Max current in the cable = ", smallest.maxcurrent)
-    print("Tabela onde esta = ", smallest.tabela)
-    print("Peso/km = ", smallest.peso)
-    print("diâmetro = ", smallest.diametro)
-    # Fim da Apresentação de resultado
+    #Apresentação de resultado
+    print("PERMANENTE:") 
+    show_cable(smallest)
+    
 
     # Fim Contas regime permanente
     print("\n\n")
@@ -256,6 +280,7 @@ def option5():
     flag = 1
 
 def option6():
+    #Condição de CC
     if flag:
         print('\n Definiu um cabo \n')
     else:
@@ -280,7 +305,6 @@ def option6():
         print("Cabo configurado erradamente, volte a configurar")
         return 0
     
-    print(teta, meu_cabo.t_cc)
     # PRECISO DE AJUDA
     if meu_cabo.t_cc >0 & meu_cabo.t_cc< 0.015: 
         n=1
@@ -302,7 +326,14 @@ def option6():
     for i in range(len(db_cabo_list)):
         if db_cabo_list[i].section < Sec_min_cc:
             db_cabo_list.remove(db_cabo_list[i])
+    
+    print("CONDIÇÃO DE CC: ")
+    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
+    show_cable(smallest)
+
     # pra cada valor de db_cabo_list precisa ver se é maior do que a secção
+
+
 
 if __name__=='__main__':
     while(True):
@@ -321,6 +352,8 @@ if __name__=='__main__':
         elif option == 3:
             option3()
         elif option == 4:
+            option3()
+            option6()
             option4()
         elif option == 5:
             option5()
