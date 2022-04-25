@@ -1,4 +1,5 @@
 
+from re import L
 import sqlite3
 import math
 import random
@@ -42,13 +43,16 @@ CREATE TABLE IF NOT EXISTS cabos (
   section INTEGER NOT NULL,
   perfil INTEGER NOT NULL,
   conductors INTEGER NOT NULL,
-  maxcurrent INTEGER NOT NULL
+  maxcurrent INTEGER NOT NULL,
+  tabela INTEGER,
+  Peso INTEGER,
+  diametro INTEGER
 );
 """
 execute_query(connection, create_users_table)  
 
 
-
+'''
 create_users = """
 INSERT INTO
   cabos (material, section, perfil, conductors, maxcurrent)
@@ -59,7 +63,7 @@ VALUES
 """
 
 execute_query(connection, create_users)
-
+'''
 
 
 
@@ -87,18 +91,21 @@ menu_options = {
     6: 'Calculo de secção em cc',
 }
 class cabolist:
-    def __init__(self, id, material, section, perfil, conductors, maxcurrent): 
+    def __init__(self, id, material, section, perfil, conductors, maxcurrent, tabela, peso, diametro): 
         self.id = id
         self.material = material
         self.section = section
         self.perfil = perfil
         self.conductors = conductors
         self.maxcurrent = maxcurrent
+        self.tabela = tabela
+        self.peso = peso
+        self.diametro = diametro
 
 db_cabo_list = []
 
 class cabo:
-    def __init__(self, U, Scc, S, Perf, Disp, Cond, Mat, D, t_cc): 
+    def __init__(self, U, Scc, S, Perf, Disp, Cond, Mat, a, t_cc, l, sigma): 
         
         #depois mudar isso
 
@@ -109,14 +116,15 @@ class cabo:
         self.Disp = Disp
         self.Cond = Cond
         self.Mat = Mat
-        self.D = D
+        self.a = a
         self.t_cc = t_cc
-
+        self.l = l
+        self.sigma = sigma
 
         self.Is = self.S / ( 1.732 * self.U )
         self.Icc = self.Scc / ( 1.732 * self.U )
 
-meu_cabo = cabo(1,1,1,1,1,1,1,1,1)
+meu_cabo = cabo(1,1,1,5,1,1,0,1,1,1,1)
 flag = 1 #IMPORTANTE MUDAR DEPOIS
 
 def fator_ar(iz, delta1, delta2):
@@ -143,14 +151,7 @@ def print_menu():
         print (key, '--', menu_options[key] )
 
 def option4():
-    material = input('Qual o material (0 pra cobre e 1 pra aluminio): ')
-    section = input('Qual a secção: ')
-    perfil = input('Qual o perfil: ')
-    conductors = input('Quantos condutores: ')
-    cabo_a_adicionar = "(" + material + ", " + section + ", "+ perfil + ", "+conductors + ")"
-    create_users = "INSERT INTO cabos (material, section, perfil, conductors) VALUES " + cabo_a_adicionar
-    print(cabo_a_adicionar)
-    execute_query(connection, create_users)
+    f=1
 
 def option2():
     select_cabos = "SELECT * from cabos"
@@ -183,19 +184,41 @@ def option3():
             word[y]=word[y].replace("(","")
             word[y]=word[y].replace(",","")
             word[y]=word[y].replace(")","")
+            word[y]=word[y].replace("'","")
         id=word[0]
         material= int(word[1])
         section = int(word[2])
         perfil = int(word[3])
         conductor = int(word[4])
         maxcurrent = int(word[5])
-        temp = cabolist(id, material, section, perfil, conductor, maxcurrent)
+        tabela = int(word[6])
+        peso = int(word[7])
+        diametro = int(word[8])
+        temp = cabolist(id, material, section, perfil, conductor, maxcurrent, tabela, peso, diametro)
         if temp.maxcurrent > meu_cabo.Is:
             db_cabo_list.append(temp)
 
     # the one with less section
     smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
-    print("Cabo de menor secção que cumpre as especificações: ", smallest.id)
+
+    #Apresentação de resultado 
+    #PRECISO DE AJUDA
+    print("Cabo de menor secção que cumpre as especificações: ")
+    print("id = ", smallest.id)
+    if smallest.material == 0:
+        print("Material = Cobre não pintado")
+    elif smallest.material == 1:
+        print("Material = Aluminio não pintado")
+
+    print("Section = ", smallest.section)
+    print("Perfil = ", smallest.perfil)
+    print("Nº Conductors = ", smallest.conductors)
+    print("Max current in the cable = ", smallest.maxcurrent)
+    print("Tabela onde esta = ", smallest.tabela)
+    print("Peso/km = ", smallest.peso)
+    print("diâmetro = ", smallest.diametro)
+    # Fim da Apresentação de resultado
+
     # Fim Contas regime permanente
     print("\n\n")
 
@@ -208,9 +231,11 @@ def option5():
     Disp = int(input('Qual a disposicao: '))
     Cond = int(input('Quantos condutores: '))
     Mat = int(input('Qual o material (0 - Cu,  1 - Al, 2 - Cu pintado, 3 - Al pintado): '))
-    D = int(input('Qual a distãncia: '))
+    a = int(input('Qual a distãncia: '))
     t_cc = int(input('Qual o tempo do cc: '))
-    temp  = cabo(U, Scc, S, Perf, Disp, Cond, Mat, D, t_cc) 
+    l = int(input('Qual o comprimento do vao: '))
+    sigma = int(input('Qual a carga de seguranca a flexão: '))
+    temp  = cabo(U, Scc, S, Perf, Disp, Cond, Mat, a, t_cc, l, sigma) 
     # Fim da entrada de dados
 
     # Fase 2 - bersão base - Contas regime permanente
