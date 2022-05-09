@@ -92,7 +92,11 @@ class cabolist:
             self.custo = peso*4.20 #(peso/km)*preçoCU
         if (self.material == 1) | (self.material == 3):
             self.custo = peso*2.75 #(peso/km)*preçoAL
-
+        
+        E = 1.2 * 1000000
+        L = meu_cabo.l
+        self.fo = 112 * math.sqrt((E*self.inercia)/(self.peso*L*L*L*L))
+        
 
 db_cabo_list = []
 
@@ -170,13 +174,8 @@ def custo():
 
 def ressonancia():
     for i in range(len(db_cabo_list)):
-        E = 1.2 * 1000000
-        I = 1 #AJUDA DA MARGARIDA
-        p = 1 #AJUDA DA MARGARIDA
-        l = 1 #AJUDA DA MARGARIDA
-        fo = 112 * math.sqrt((E*I)/(p*l*l*l*l))
-        if (fo>45 and fo<55) or (fo>90 and fo<110):
-            db_cabo_list.remove(db_cabo_list[i])
+        if (db_cabo_list[i].fo>45 and db_cabo_list[i].fo<55) or (db_cabo_list[i].fo>90 and db_cabo_list[i].fo<110):
+                db_cabo_list.remove(db_cabo_list[i])
 
     # the one with less section
     smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
@@ -223,9 +222,9 @@ def permanente():
         conductor = int(float(word[4]))
         maxcurrent = int(float(word[5]))
         tabela = int(float(word[6]))
-        peso = int(float(word[7]))
-        inercia = int(float(word[8]))
-        w = int(float(word[9]))
+        peso = float(word[7])
+        inercia = float(word[8])
+        w = float(word[9])
         temp = cabolist(id, material, section, perfil, conductor, maxcurrent, tabela, peso, inercia, w)
         #show_cable(temp)
         if temp.maxcurrent > meu_cabo.Is:
@@ -249,10 +248,8 @@ def option5():
     Scc = int(input('Qual a potencia de cc: '))
     S = int(input('Qual a potencia nominal: '))
     Perf = int(input('Qual o perfil: '))
-    Disp = int(input('Qual a disposicao: '))
     Cond = int(input('Quantos condutores: '))
     Mat = int(input('Qual o material (0 - Cu,  1 - Al, 2 - Cu pintado, 3 - Al pintado): '))
-    a = int(input('Qual a distãncia: '))
     t_cc = int(input('Qual o tempo do cc: '))
     l = int(input('Qual o comprimento do vao: '))
     sigma = int(input('Qual a carga de seguranca a flexão: '))
@@ -282,18 +279,10 @@ def cc():
     print("\n\n")
     if (meu_cabo.Mat == 0) | (meu_cabo.Mat == 2):
         #Cobre
-        teta_ini = 65
-        teta_fim = 200
-        teta = teta_fim -  teta_ini
         k_linha = 148
-        p_esp = 8.9
     elif (meu_cabo.Mat == 1) | (meu_cabo.Mat == 3):
         #Aluminio
-        teta_ini = 65
-        teta_fim = 150
-        teta = teta_fim -  teta_ini
         k_linha = 76
-        p_esp = 2.6
     else:
         print("Cabo configurado erradamente, volte a configurar")
         return 0
