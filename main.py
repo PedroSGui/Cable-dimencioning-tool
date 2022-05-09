@@ -73,7 +73,7 @@ menu_options = {
     3: 'Calculo de secção em regime permanente',
     4: 'Calcular Ressonancia mecânica',
     5: 'Adicionar cabo para calculo',
-    6: 'Calculo de secção em cc',
+    6: 'Calculo Completo',
 }
 class cabolist:
     def __init__(self, id, material, section, perfil, conductors, maxcurrent, tabela, peso, inercia, w): 
@@ -87,6 +87,12 @@ class cabolist:
         self.peso = peso
         self.inercia = inercia
         self.w = w
+        
+        if (self.material == 0) | (self.material == 2):
+            self.custo = peso*4.20 #(peso/km)*preçoCU
+        if (self.material == 1) | (self.material == 3):
+            self.custo = peso*2.75 #(peso/km)*preçoAL
+
 
 db_cabo_list = []
 
@@ -157,24 +163,28 @@ def print_menu():
     for key in menu_options.keys():
         print (key, '--', menu_options[key] )
 
-def option4():
-    
-    
+def custo():
+    chepest = min (db_cabo_list, key=lambda cabolist: cabolist.custo)
+    print("\n\nCUSTO:")
+    show_cable(chepest)
+
+def ressonancia():
     for i in range(len(db_cabo_list)):
         E = 1.2 * 1000000
-        I = 0 #AJUDA DA MARGARIDA
-        p = 0 #AJUDA DA MARGARIDA
-        l = 0 #AJUDA DA MARGARIDA
+        I = 1 #AJUDA DA MARGARIDA
+        p = 1 #AJUDA DA MARGARIDA
+        l = 1 #AJUDA DA MARGARIDA
         fo = 112 * math.sqrt((E*I)/(p*l*l*l*l))
-        if db_cabo_list[i].section < Sec_min_cc:
+        if (fo>45 and fo<55) or (fo>90 and fo<110):
             db_cabo_list.remove(db_cabo_list[i])
 
     # the one with less section
     smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
 
     #Apresentação de resultado
-    print("RESSONANCIA:") 
+    print("\n\nRESSONANCIA:") 
     show_cable(smallest)
+
 
 def option2():
     select_cabos = "SELECT * from cabos"
@@ -184,14 +194,12 @@ def option2():
         print(cabos)
     print("\n\n")
 
-def option3():
+def permanente():
     
     if flag:
         print('\n Definiu um cabo \n')
     else:
         option5()
-
-    
 
     # search cables in database
     select_cabos = "SELECT * FROM cabos WHERE perfil = '"+ str(meu_cabo.Perf) +".0' AND material = '"+ str(meu_cabo.Mat) +".0'"
@@ -208,7 +216,7 @@ def option3():
             word[y]=word[y].replace(",","")
             word[y]=word[y].replace(")","")
             word[y]=word[y].replace("'","")
-        id=word[0]
+        id=int(float(word[0]))
         material= int(float(word[1]))
         section = int(float(word[2]))
         perfil = int(float(word[3]))
@@ -268,12 +276,8 @@ def option5():
     meu_cabo = temp
     flag = 1
 
-def option6():
+def cc():
     #Condição de CC
-    if flag:
-        print('\n Definiu um cabo \n')
-    else:
-        option5()
 
     print("\n\n")
     if (meu_cabo.Mat == 0) | (meu_cabo.Mat == 2):
@@ -339,16 +343,18 @@ if __name__=='__main__':
         elif option == 2:
             option2()
         elif option == 3:
-            option3()
+            permanente()
         elif option == 4:
-            option3()
-            option6()
-            option4()
+            permanente()
+            cc()
+            ressonancia()
         elif option == 5:
             option5()
         elif option == 6:
-            option3()
-            option6()
+            permanente()
+            cc()
+            ressonancia()
+            custo()
         else:
             print('Invalid option. Please enter a number between 1 and 4.')
 
