@@ -153,11 +153,11 @@ def fator_temp(iz, teta1, teta2):
 def fator_alt(iz, h):
     if h<1000:
         iz = iz * 1
-    elif h>=1000 & h<2000:
+    elif h>=1000 and h<2000:
         iz = iz * 1
-    elif h>=2000 & h<3000:
+    elif h>=2000 and h<3000:
         iz = iz * 0.99
-    elif h>=3000 & h<4000:
+    elif h>=3000 and h<4000:
         iz = iz * 0.96    
     else:
         iz = iz * 0.9
@@ -288,19 +288,86 @@ def cc():
         return 0
     
     # PRECISO DE AJUDA
-    if meu_cabo.t_cc >0 & meu_cabo.t_cc< 0.015: 
+    if meu_cabo.t_cc >0 and meu_cabo.t_cc< 0.015: 
         n=1
-    elif meu_cabo.t_cc >0.015 & meu_cabo.t_cc< 0.02:
+        m=1.5
+    elif meu_cabo.t_cc >0.015 and meu_cabo.t_cc< 0.02:
         n=0.96
+        m=1.4
+    elif meu_cabo.t_cc >0.02 and meu_cabo.t_cc< 0.025:
+        n=0.98
+        m=1.38
+    elif meu_cabo.t_cc >0.025 and meu_cabo.t_cc< 0.03:
+        m=1.2
+        n=0.98
+    elif meu_cabo.t_cc >0.03 and meu_cabo.t_cc< 0.035:
+        n=0.97
+        m=1.10
+    elif meu_cabo.t_cc >0.035 and meu_cabo.t_cc< 0.04:
+        m=1.10
+        n=0.97
+    elif meu_cabo.t_cc>0.04 and meu_cabo.t_cc<0.045:
+        m=0.98
+        n=0.97
+    elif meu_cabo.t_cc>0.045 and meu_cabo.t_cc<0.05:
+        m=0.90
+        n=0.97
+    elif meu_cabo.t_cc>0.05 and meu_cabo.t_cc<0.055:
+        m=0.8
+        n=0.95
+    elif meu_cabo.t_cc>0.055 and meu_cabo.t_cc<0.06:
+        m=0.77
+        n=0.93
+    elif meu_cabo.t_cc>0.06 and meu_cabo.t_cc<0.065:
+        m=0.77
+        n=0.93
+    elif meu_cabo.t_cc>0.065 and meu_cabo.t_cc<0.07:
+        m=0.7
+        n=0.93
+    elif meu_cabo.t_cc>0.07 and meu_cabo.t_cc<0.075:
+        m=0.63
+        n=0.93
+    elif meu_cabo.t_cc>0.075 and meu_cabo.t_cc<0.08:
+        m=0.61
+        n=0.93
+    elif meu_cabo.t_cc>0.085 and meu_cabo.t_cc<0.09:
+        m=0.6
+        n=0.93
+    elif meu_cabo.t_cc>0.09 and meu_cabo.t_cc<0.1:	
+        m=0.6
+        n=0.93
+    elif meu_cabo.t_cc>0.1 and meu_cabo.t_cc<0.2:
+        m=0.4
+        n=0.93
+    elif meu_cabo.t_cc>0.2 and meu_cabo.t_cc<0.3:
+        m=0.3
+        n=0.92
+    elif meu_cabo.t_cc>0.3 and meu_cabo.t_cc<0.4:
+        m=0.18
+        n=0.9
+    elif meu_cabo.t_cc>0.4 and meu_cabo.t_cc<0.5:
+        m=0.15
+        n=0.88
+    elif meu_cabo.t_cc>0.5 and meu_cabo.t_cc<0.6:
+        m=0.10
+        n=0.87
+    elif meu_cabo.t_cc>0.6 and meu_cabo.t_cc<0.7:
+        m=0.08
+        n=0.86
+    elif meu_cabo.t_cc>0.7 and meu_cabo.t_cc<0.8:
+        m=0.07
+        n=0.85
+    elif meu_cabo.t_cc>0.8 and meu_cabo.t_cc<0.9:
+        m=0.05
+        n=0.84
+    elif meu_cabo.t_cc>0.9 and meu_cabo.t_cc<1.0:
+        m=0
+        n=0.83
     else:
+        m=0
         n=0.6
 
-    if meu_cabo.t_cc >0 & meu_cabo.t_cc< 0.015: 
-        m=1.6
-    elif meu_cabo.t_cc >0.015 & meu_cabo.t_cc< 0.02:
-        m=1.5
-    else:
-        m=0.01
+    
 
     Ith = meu_cabo.Icc * math.sqrt(m+n)
 
