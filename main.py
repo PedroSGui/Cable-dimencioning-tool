@@ -94,12 +94,13 @@ class cabolist:
             self.alfa = 0.000017 #IMPORTANTE COLOCAR VALOR CERTO
         if (self.material == 2) | (self.material == 3):
             self.custo = peso*2.75 #(peso/km)*preçoAL
-            self.alfa = 0.000017 #IMPORTANTE COLOCAR VALOR CERTO
+            self.alfa = 0.000022 #IMPORTANTE COLOCAR VALOR CERTO
         
         self.E = 1.2 * 1000000
         L = meu_cabo.l
-        self.fo = 112 * math.sqrt((E*self.inercia)/(self.peso*L*L*L*L))
+        self.fo = 112 * math.sqrt((self.E*self.inercia)/(self.peso*L*L*L*L))
         
+
 
 db_cabo_list = []
 
@@ -125,6 +126,9 @@ def show_cable(cable):
     print("Peso/km = ", cable.peso)
     print("Inercia = ", cable.inercia)
     print("Modulo de Flexao = ", cable.w)
+    if cable.F != 0:
+        print("Fd = ", cable.F)
+        print("Fk = ", cable.Fk)
     # Fim da Apresentação de resultado
 
 class cabo:
@@ -150,7 +154,13 @@ class cabo:
         self.m = 0
         self.n = 0
         self.varTem=0
-        #self.kLinha = e/(u.C)   #faltando
+        if (self.Mat == 1) or (self.Mat == 0):
+            self.e=(1/56)*(1+ (0.004*45)) 
+        if (self.Mat == 2) or (self.Mat == 3): #Isso muda pra Aluminio IMPORTANTE
+            self.e=(1/56)*(1+ (0.004*45)) #IMPORTANTE MUDAR DEPOIS
+        self.U=8.9*0.000001
+        self.C=4.1868*93
+        self.kLinha = self.e/(self.U*self.C)   #faltando
         
 
 #meu_cabo = cabo(1,1,1,3,1,0,1,1,1,1)
@@ -181,6 +191,7 @@ def print_menu():
         print (key, '--', menu_options[key] )
 
 def custo():
+    global chepest 
     chepest = min (db_cabo_list, key=lambda cabolist: cabolist.custo)
     print("\n\nCUSTO:")
     show_cable(chepest)
@@ -206,8 +217,6 @@ def flexao():
     for elem in db_cabo_list:
         if (elem.w < ((meu_cabo.mf)/meu_cabo.sigma)):
             db_cabo_list.remove(elem)
-
-    
 
     # the one with less section
     smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
@@ -414,12 +423,19 @@ def cc():
     # pra cada valor de db_cabo_list precisa ver se é maior do que a secção
 
 def esfTer():
-    meu_cabo.varTem = (meu_cabo.klinha * (meu_cabo.Ith/meu_cabo.S)*(meu_cabo.Ith/meu_cabo.S)*meu_cabo.t_cc) + 45
-    for elem in db_cabo_list:
-        elem.F = elem.section * elem.E * elem.alfa * meu_cabo.varTem
-        elem.Fk = (3.14159*3.14159*elem.E*elem.inercia/(elem.Io*elem.Io))
-        if elem.F < elem.Fk:
-            f=1 #qual a força pros apoios
+    global chepest
+    meu_cabo.varTem = (meu_cabo.kLinha * (meu_cabo.Ith/chepest.section)*(meu_cabo.Ith/chepest.section)*meu_cabo.t_cc) + 45 #checar unidades
+    print("\nVarTerm: ",meu_cabo.varTem)
+    print("\nKlinha: ",meu_cabo.kLinha)
+    print("\nIth: ",meu_cabo.Ith)
+    print("\nSeccao: ",chepest.section)
+    print("\nTcc: ",meu_cabo.t_cc)
+    chepest.F = chepest.section* 0.001 * chepest.E * chepest.alfa * meu_cabo.varTem
+    chepest.Fk = (3.14159*3.14159*chepest.E*chepest.inercia/(meu_cabo.l*meu_cabo.l)) #As unidades devem estar erradas
+    if chepest.F > chepest.Fk:
+        chepest.F = (10*chepest.E*chepest.inercia)/(meu_cabo.l*(1+(chepest.alfa*meu_cabo.varTem)))
+    print("\n\nESFORÇO TERMICO:")
+    show_cable(chepest)
 
 
 if __name__=='__main__':
@@ -450,6 +466,7 @@ if __name__=='__main__':
             flexao()
             ressonancia()
             custo()
+            esfTer()
         else:
             print('Invalid option. Please enter a number between 1 and 4.')
 
