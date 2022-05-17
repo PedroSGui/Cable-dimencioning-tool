@@ -147,8 +147,8 @@ class cabo:
 
         self.Is = self.S / ( 1.732 * self.U )
         self.Icc = self.Scc / ( 1.732 * self.U )
-        self.ich = self.X * 1.414 * self.Icc
-        self.fe=2.04*0.01*self.ich*self.ich*self.l/self.a
+        self.ich = self.X * 1.41421 * self.Icc* 0.93
+        self.fe=2.04*0.01*(self.ich/1000)*(self.ich/1000)*(self.l*0.01)/(self.a*0.01)
         self.mf = (self.fe* self.l)/16
         self.Ith = 0
         self.m = 0
@@ -215,6 +215,13 @@ def flexao():
 
     #print(db_cabo_list[0].id)
     for elem in db_cabo_list:
+        #print("#####\nmf:",meu_cabo.mf,"\n#######")
+        #print("#####\nfe:",meu_cabo.fe,"\n#######")
+        #print("#####\nich:",meu_cabo.ich,"\n#######")
+        #print("#####\nl:",meu_cabo.l,"\n#######")            
+        #print("#####\na:",meu_cabo.a,"\n#######")
+        #print("#####\nsigma:",meu_cabo.sigma,"\n#######")
+        #print("#####\nw:",elem.w,"\n#######\n\n\n\n")
         if (elem.w < ((meu_cabo.mf)/meu_cabo.sigma)):
             db_cabo_list.remove(elem)
 
