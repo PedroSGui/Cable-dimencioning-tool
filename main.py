@@ -126,6 +126,7 @@ def show_cable(cable):
     print("Peso/km = ", cable.peso)
     print("Inercia = ", cable.inercia)
     print("Modulo de Flexao = ", cable.w)
+    print("Freq de ressonancia: = ", cable.fo)
     if cable.F != 0:
         print("Fd = ", cable.F)
         print("Fk = ", cable.Fk)
@@ -164,7 +165,7 @@ class cabo:
         
 
 #meu_cabo = cabo(1,1,1,3,1,0,1,1,1,1)
-meu_cabo = cabo(15000,500000000,1250000,5,1,1,35,0.5,180,12000)
+meu_cabo = cabo(15000,500000000,1250000,5,1,1,35,0.5,180,1200)
 flag = 1 #IMPORTANTE MUDAR DEPOIS
 
 def fator_ar(iz, delta1, delta2):
@@ -215,17 +216,9 @@ def flexao():
 
     #print(db_cabo_list[0].id)
     for elem in db_cabo_list:
-        #print("#####\nmf:",meu_cabo.mf,"\n#######")
-        #print("#####\nfe:",meu_cabo.fe,"\n#######")
-        #print("#####\nich:",meu_cabo.ich,"\n#######")
-        #print("#####\nl:",meu_cabo.l,"\n#######")            
-        #print("#####\na:",meu_cabo.a,"\n#######")
-        #print("#####\nsigma:",meu_cabo.sigma,"\n#######")
-        #print("#####\nw:",elem.w,"\n#######\n\n\n\n")
         if (elem.w < ((meu_cabo.mf)/meu_cabo.sigma)):
             db_cabo_list.remove(elem)
-
-    # the one with less section
+            
     smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
 
     #Apresentação de resultado
