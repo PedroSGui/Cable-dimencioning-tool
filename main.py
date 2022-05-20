@@ -64,6 +64,14 @@ menu_options = {
     3: 'Calculo Completo',
     4: 'Adicionar cabo para calculo',
 }
+
+def print_menu():
+    for key in menu_options.keys():
+        print (key, '--', menu_options[key] )
+
+# Fim do menu
+#Inicio das estruturas de dados
+
 class cabolist:
     def __init__(self, id, material, section, perfil, conductors, maxcurrent, tabela, peso, inercia, w): 
         self.id = id
@@ -87,36 +95,8 @@ class cabolist:
         
         self.E = 1.2 * 1000000
         L = meu_cabo.l
-        self.fo = 112 * math.sqrt((self.E*self.inercia)/(self.peso*L*L*L*L))
-        
+        self.fo = 112 * math.sqrt((self.E*self.inercia)/(self.peso*L*L*L*L))   
 db_cabo_list = []
-
-def show_cable(cable):
-    #Apresentação de resultado 
-    print("Cabo de menor secção que cumpre as especificações: ")
-    print("id = ", cable.id)
-    if cable.material == 0:
-        print("Material = Cobre não pintado")
-    elif cable.material == 1:
-        print("Material = Cobre pintado")
-    elif cable.material == 2:
-        print("Material = Aluminio não pintado")
-    elif cable.material == 3:
-        print("Material = Aluminio pintado")
-
-    print("Section = ", cable.section)
-    print("Perfil = ", cable.perfil)
-    print("Nº Conductors = ", cable.conductors)
-    print("Max current in the cable = ", cable.maxcurrent)
-    print("Tabela onde esta = ", cable.tabela)
-    print("Peso/km = ", cable.peso)
-    print("Inercia = ", cable.inercia)
-    print("Modulo de Flexao = ", cable.w)
-    print("Freq de ressonancia: = ", cable.fo)
-    if cable.F != 0:
-        print("Fd = ", cable.F)
-        print("Fk = ", cable.Fk)
-    # Fim da Apresentação de resultado
 
 class cabo:
     def __init__(self, U, Scc, S, Perf, Cond, Mat, a, t_cc, l, sigma): 
@@ -149,127 +129,52 @@ class cabo:
         self.C=4.1868*93
         self.kLinha = self.e/(self.U*self.C)   #faltando
         
-
-#meu_cabo = cabo(1,1,1,3,1,0,1,1,1,1)
 meu_cabo = cabo(15000,500000000,1250000,5,1,1,35,0.5,180,1200)
 flag = 1 #IMPORTANTE MUDAR DEPOIS
 
-def fator_ar(iz, delta1, delta2):
-    return iz * math.sqrt(delta1/delta2) 
+def show_cable(cable):
+    #Apresentação de resultado 
+    print("Cabo de menor secção que cumpre as especificações: ")
+    print("id = ", cable.id)
+    if cable.material == 0:
+        print("Material = Cobre não pintado")
+    elif cable.material == 1:
+        print("Material = Cobre pintado")
+    elif cable.material == 2:
+        print("Material = Aluminio não pintado")
+    elif cable.material == 3:
+        print("Material = Aluminio pintado")
 
-def fator_temp(iz, teta1, teta2):
-    return iz * math.sqrt(teta1/teta2)
+    print("Section = ", cable.section)
+    if cable.perfil == 0:
+        print("Perfil = ")
+    elif cable.perfil == 1:
+        print("Perfil = ")
+    elif cable.perfil == 2:
+        print("Perfil = ")
+    elif cable.perfil == 3:
+        print("Perfil = ")
+    elif cable.perfil == 4:
+        print("Perfil = ")
+    elif cable.perfil == 5:
+        print("Perfil = ")
+    elif cable.perfil == 6:
+        print("Perfil = ")
+    print("Nº Conductors = ", cable.conductors)
+    print("Max current in the cable = ", cable.maxcurrent)
+    print("Tabela onde esta = ", cable.tabela)
+    print("Peso/km = ", cable.peso)
+    print("Inercia = ", cable.inercia)
+    print("Modulo de Flexao = ", cable.w)
+    print("Freq de ressonancia: = ", cable.fo)
+    if cable.F != 0:
+        print("Fd = ", cable.F)
+        print("Fk = ", cable.Fk)
+    if cable.custo != 0:
+        print("O cabo custa ", round(cable.custo,2)," euros por km")
+    # Fim da Apresentação de resultado
 
-def fator_alt(iz, h):
-    if h<1000:
-        iz = iz * 1
-    elif h>=1000 and h<2000:
-        iz = iz * 1
-    elif h>=2000 and h<3000:
-        iz = iz * 0.99
-    elif h>=3000 and h<4000:
-        iz = iz * 0.96    
-    else:
-        iz = iz * 0.9
-    return iz
-
-def print_menu():
-    for key in menu_options.keys():
-        print (key, '--', menu_options[key] )
-
-def custo():
-    global chepest 
-    chepest = min (db_cabo_list, key=lambda cabolist: cabolist.custo)
-    print("\n\nCUSTO:")
-    show_cable(chepest)
-
-def ressonancia():
-    #print(db_cabo_list[0].id)
-    for elem in db_cabo_list:
-        #print("$$", db_cabo_list[i].fo)
-        #show_cable(db_cabo_list[i])
-        if (elem.fo>45 and elem.fo<55) or (elem.fo>90 and elem.fo<110):
-            db_cabo_list.remove(elem)
-
-    # the one with less section
-    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
-
-    #Apresentação de resultado
-    print("\n\nRESSONANCIA:") 
-    show_cable(smallest)
-
-def flexao():
-
-    #print(db_cabo_list[0].id)
-    for elem in db_cabo_list:
-        if (elem.w < ((meu_cabo.mf)/meu_cabo.sigma)):
-            db_cabo_list.remove(elem)
-            
-    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
-
-    #Apresentação de resultado
-    print("\n\nFLEXAO:") 
-    show_cable(smallest)
-
-
-def option2():
-    select_cabos = "SELECT * from cabos"
-    cabos = execute_read_query(connection, select_cabos)
-    print("\n\n")
-    for cabos in cabos:
-        print(cabos)
-    print("\n\n")
-
-def permanente():
-    
-    if flag:
-        print('\n Definiu um cabo \n')
-    else:
-        option5()
-
-    # search cables in database
-    select_cabos = "SELECT * FROM cabos WHERE perfil = '"+ str(meu_cabo.Perf) +".0' AND material = '"+ str(meu_cabo.Mat) +".0'"
-    cabos = execute_read_query(connection, select_cabos)
-    i=0
-    cabo_select = []
-    for cabos in cabos:
-        cabo_select.append(str(cabos))
-        i=i+1
-    for i in range(len(cabo_select)):
-        word = cabo_select[i].split()
-        for y in range(len(word)):
-            word[y]=word[y].replace("(","")
-            word[y]=word[y].replace(",","")
-            word[y]=word[y].replace(")","")
-            word[y]=word[y].replace("'","")
-        id=int(float(word[0]))
-        material= int(float(word[1]))
-        section = int(float(word[2]))
-        perfil = int(float(word[3]))
-        conductor = int(float(word[4]))
-        maxcurrent = int(float(word[5]))
-        tabela = int(float(word[6]))
-        peso = float(word[7])
-        inercia = float(word[8])
-        w = float(word[9])
-        temp = cabolist(id, material, section, perfil, conductor, maxcurrent, tabela, peso, inercia, w)
-        #show_cable(temp)
-        if temp.maxcurrent > meu_cabo.Is:
-            #print("## cabo:",temp.maxcurrent, "\t caso:",meu_cabo.Is)
-            db_cabo_list.append(temp)
-
-    # the one with less section
-    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
-
-    #Apresentação de resultado
-    print("PERMANENTE:") 
-    show_cable(smallest)
-    
-
-    # Fim Contas regime permanente
-    print("\n\n")
-
-def option5():
+def caso():
     # Entrada de dados
     U = int(input('Qual o nivel de tensao: '))
     Scc = int(input('Qual a potencia de cc: '))
@@ -301,6 +206,115 @@ def option5():
     meu_cabo = temp
     flag = 1
 
+def fator_ar(iz, delta1, delta2):
+    return iz * math.sqrt(delta1/delta2) 
+
+def fator_temp(iz, teta1, teta2):
+    return iz * math.sqrt(teta1/teta2)
+
+def fator_alt(iz, h):
+    if h<1000:
+        iz = iz * 1
+    elif h>=1000 and h<2000:
+        iz = iz * 1
+    elif h>=2000 and h<3000:
+        iz = iz * 0.99
+    elif h>=3000 and h<4000:
+        iz = iz * 0.96    
+    else:
+        iz = iz * 0.9
+    return iz
+
+def custo():
+    global chepest 
+    chepest = min (db_cabo_list, key=lambda cabolist: cabolist.custo)
+    print("\n\nCUSTO:")
+    show_cable(chepest)
+
+def ressonancia():
+    #print(db_cabo_list[0].id)
+    for elem in db_cabo_list:
+        #print("$$", db_cabo_list[i].fo)
+        #show_cable(db_cabo_list[i])
+        if (elem.fo>45 and elem.fo<55) or (elem.fo>90 and elem.fo<110):
+            db_cabo_list.remove(elem)
+
+    # the one with less section
+    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
+
+    #Apresentação de resultado
+    print("\n\nRESSONANCIA:") 
+    show_cable(smallest)
+
+def flexao():
+    for elem in db_cabo_list:
+        if (elem.w < ((meu_cabo.mf)/meu_cabo.sigma)):
+            db_cabo_list.remove(elem)
+            
+    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
+
+    #Apresentação de resultado
+    print("\n\nFLEXAO:") 
+    show_cable(smallest)
+
+
+def lerDB():
+    select_cabos = "SELECT * from cabos"
+    cabos = execute_read_query(connection, select_cabos)
+    print("\n\n")
+    for cabos in cabos:
+        print(cabos)
+    print("\n\n")
+
+def intro():
+    if flag:
+        print('\n Definiu um cabo \n')
+    else:
+        caso()
+
+    # search cables in database
+    select_cabos = "SELECT * FROM cabos WHERE perfil = '"+ str(meu_cabo.Perf) +".0' AND material = '"+ str(meu_cabo.Mat) +".0'"
+    cabos = execute_read_query(connection, select_cabos)
+    i=0
+    cabo_select = []
+    for cabos in cabos:
+        cabo_select.append(str(cabos))
+        i=i+1
+    for i in range(len(cabo_select)):
+        word = cabo_select[i].split()
+        for y in range(len(word)):
+            word[y]=word[y].replace("(","")
+            word[y]=word[y].replace(",","")
+            word[y]=word[y].replace(")","")
+            word[y]=word[y].replace("'","")
+        id=int(float(word[0]))
+        material= int(float(word[1]))
+        section = int(float(word[2]))
+        perfil = int(float(word[3]))
+        conductor = int(float(word[4]))
+        maxcurrent = int(float(word[5]))
+        tabela = int(float(word[6]))
+        peso = float(word[7])
+        inercia = float(word[8])
+        w = float(word[9])
+        temp = cabolist(id, material, section, perfil, conductor, maxcurrent, tabela, peso, inercia, w)
+        db_cabo_list.append(temp)
+
+def permanente():
+    for elem in db_cabo_list:
+        if elem.maxcurrent < meu_cabo.Is:
+            db_cabo_list.remove(elem)
+
+    # the one with less section
+    smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
+
+    #Apresentação de resultado
+    print("PERMANENTE:") 
+    show_cable(smallest)
+
+    # Fim Contas regime permanente
+    print("\n\n")
+
 def cc():
     #Condição de CC
     if (meu_cabo.Mat == 0) | (meu_cabo.Mat == 1):
@@ -313,7 +327,6 @@ def cc():
         print("Cabo configurado erradamente, volte a configurar")
         return 0
     
-    # PRECISO DE AJUDA
     if meu_cabo.t_cc >=0 and meu_cabo.t_cc< 0.015: 
         n=1
         m=1.5
@@ -437,14 +450,17 @@ if __name__=='__main__':
             print('Thanks message before exiting')
             exit()
         elif option == 2:
-            option2()
+            lerDB()
         elif option == 3:
+            intro()
             permanente()
             cc()
             flexao()
             ressonancia()
             custo()
             esfTer()
+        elif option == 4:
+            caso()
         else:
             print('Invalid option. Please enter a number between 1 and 4.')
 
