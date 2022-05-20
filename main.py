@@ -92,10 +92,9 @@ class cabolist:
         if (self.material == 2) | (self.material == 3):
             self.custo = peso*2.75 #(peso/km)*preçoAL
             self.alfa = 0.000022 #IMPORTANTE COLOCAR VALOR CERTO
-        
         self.E = 1.2 * 1000000
-        L = meu_cabo.l
-        self.fo = 112 * math.sqrt((self.E*self.inercia)/(self.peso*L*L*L*L))   
+        L = meu_cabo.l*10
+        self.fo = 112 * math.sqrt(10*(self.E*0.01*self.inercia*10000)/(self.peso*0.001*L*L*L*L))   
 db_cabo_list = []
 
 class cabo:
@@ -122,9 +121,9 @@ class cabo:
         self.n = 0
         self.varTem=0
         if (self.Mat == 1) or (self.Mat == 0):
-            self.e=(1/56)*(1+ (0.004*45)) 
+            self.e=(1/56)*(1+ (0.004*45))*0.001 
         if (self.Mat == 2) or (self.Mat == 3): #Isso muda pra Aluminio IMPORTANTE
-            self.e=(1/56)*(1+ (0.004*45)) #IMPORTANTE MUDAR DEPOIS
+            self.e=(1/56)*(1+ (0.004*45))*0.001 #IMPORTANTE MUDAR DEPOIS
         self.U=8.9*0.000001
         self.C=4.1868*93
         self.kLinha = self.e/(self.U*self.C)   #faltando
@@ -145,33 +144,35 @@ def show_cable(cable):
     elif cable.material == 3:
         print("Material = Aluminio pintado")
 
-    print("Section = ", cable.section)
-    if cable.perfil == 0:
-        print("Perfil = ")
-    elif cable.perfil == 1:
-        print("Perfil = ")
+    print("Section = ", cable.section, "mm^2")
+
+    if cable.perfil == 1:
+        print("Perfil = Circular")
     elif cable.perfil == 2:
-        print("Perfil = ")
+        print("Perfil = Tubular")
     elif cable.perfil == 3:
-        print("Perfil = ")
+        print("Perfil = Retangular Horizontal")
     elif cable.perfil == 4:
-        print("Perfil = ")
+        print("Perfil = Retangular Vertical")
     elif cable.perfil == 5:
-        print("Perfil = ")
+        print("Perfil = U Vertical")
     elif cable.perfil == 6:
-        print("Perfil = ")
+        print("Perfil = U Horizontal")
     print("Nº Conductors = ", cable.conductors)
-    print("Max current in the cable = ", cable.maxcurrent)
+    print("Max current in the cable = ", cable.maxcurrent, "A")
     print("Tabela onde esta = ", cable.tabela)
-    print("Peso/km = ", cable.peso)
-    print("Inercia = ", cable.inercia)
-    print("Modulo de Flexao = ", cable.w)
-    print("Freq de ressonancia: = ", cable.fo)
+    print("Peso/km = ", cable.peso, "kg/m")
+    print("Inercia = ", cable.inercia, ", cm^4")
+    print("Modulo de Flexao = ", cable.w, "cm^3")
+    if cable.fo != 0:
+        print("Freq de ressonancia: = ", cable.fo, "Hz")
     if cable.F != 0:
-        print("Fd = ", cable.F)
-        print("Fk = ", cable.Fk)
+        print("F = ", cable.F, "kgf")
+        print("Fk = ", cable.Fk, "kgf")
+        print("Força exercida sobre os isoladores nas extremidades = ",cable.extremidade, "kgf")
+        print("Força exercida sobre os isoladores intermedios = ",cable.intermedio, "kgf")
     if cable.custo != 0:
-        print("O cabo custa ", round(cable.custo,2)," euros por km")
+        print("O cabo custa ", round(cable.custo,2)," euros/m")
     # Fim da Apresentação de resultado
 
 def caso():
@@ -424,15 +425,12 @@ def cc():
 def esfTer():
     global chepest
     meu_cabo.varTem = (meu_cabo.kLinha * (meu_cabo.Ith/chepest.section)*(meu_cabo.Ith/chepest.section)*meu_cabo.t_cc) + 45 #checar unidades
-    print("\nVarTerm: ",meu_cabo.varTem)
-    print("\nKlinha: ",meu_cabo.kLinha)
-    print("\nIth: ",meu_cabo.Ith)
-    print("\nSeccao: ",chepest.section)
-    print("\nTcc: ",meu_cabo.t_cc)
-    chepest.F = chepest.section* 0.001 * chepest.E * chepest.alfa * meu_cabo.varTem
+    chepest.F = chepest.section * (chepest.E*0.01) * chepest.alfa * meu_cabo.varTem
     chepest.Fk = (3.14159*3.14159*chepest.E*chepest.inercia/(meu_cabo.l*meu_cabo.l)) #As unidades devem estar erradas
     if chepest.F > chepest.Fk:
-        chepest.F = (10*chepest.E*chepest.inercia)/(meu_cabo.l*(1+(chepest.alfa*meu_cabo.varTem)))
+        chepest.F = (10*chepest.E*chepest.inercia)/(meu_cabo.l*(1+(chepest.alfa*meu_cabo.varTem))*meu_cabo.l*(1+(chepest.alfa*meu_cabo.varTem)))
+    chepest.extremidade = math.sqrt((chepest.F*chepest.F)/4+(meu_cabo.fe*meu_cabo.fe)/4)
+    chepest.intermedio = meu_cabo.fe
     print("\n\nESFORÇO TERMICO:")
     show_cable(chepest)
 
