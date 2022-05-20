@@ -9,20 +9,12 @@ import time
 from sqlite3 import Error
 
 def create_connection(path):
-
     connection = None
-
     try:
-
         connection = sqlite3.connect(path)
-
         print("Connection to SQLite DB successful")
-
     except Error as e:
-
         print(f"The error '{e}' occurred")
-
-
     return connection
 
 connection = create_connection(".\sm_app.sqlite")
@@ -66,14 +58,11 @@ def execute_read_query(connection, query):
 
 # Começa a partir daqui
 
-
 menu_options = {
     1: 'Exit',
     2: 'Ver tabela',
-    3: 'Calculo de secção em regime permanente',
-    4: 'Calcular Ressonancia mecânica',
-    5: 'Adicionar cabo para calculo',
-    6: 'Calculo Completo',
+    3: 'Calculo Completo',
+    4: 'Adicionar cabo para calculo',
 }
 class cabolist:
     def __init__(self, id, material, section, perfil, conductors, maxcurrent, tabela, peso, inercia, w): 
@@ -100,13 +89,10 @@ class cabolist:
         L = meu_cabo.l
         self.fo = 112 * math.sqrt((self.E*self.inercia)/(self.peso*L*L*L*L))
         
-
-
 db_cabo_list = []
 
 def show_cable(cable):
     #Apresentação de resultado 
-    #PRECISO DE AJUDA
     print("Cabo de menor secção que cumpre as especificações: ")
     print("id = ", cable.id)
     if cable.material == 0:
@@ -148,7 +134,7 @@ class cabo:
 
         self.Is = self.S / ( 1.732 * self.U )
         self.Icc = self.Scc / ( 1.732 * self.U )
-        self.ich = self.X * 1.41421 * self.Icc* 0.93
+        self.ich = self.X * 1.41421 * self.Icc * 0.93
         self.fe=2.04*0.01*(self.ich/1000)*(self.ich/1000)*(self.l*0.01)/(self.a*0.01)
         self.mf = (self.fe* self.l)/16
         self.Ith = 0
@@ -453,14 +439,6 @@ if __name__=='__main__':
         elif option == 2:
             option2()
         elif option == 3:
-            permanente()
-        elif option == 4:
-            permanente()
-            cc()
-            ressonancia()
-        elif option == 5:
-            option5()
-        elif option == 6:
             permanente()
             cc()
             flexao()
