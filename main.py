@@ -1,4 +1,3 @@
-
 from re import A, L
 import sqlite3
 import math
@@ -63,6 +62,7 @@ menu_options = {
     2: 'Ver tabela',
     3: 'Calculo Completo',
     4: 'Adicionar cabo para calculo',
+    5: 'Análise de sensibilidade',
 }
 
 def print_menu():
@@ -71,6 +71,22 @@ def print_menu():
 
 # Fim do menu
 #Inicio das estruturas de dados
+
+def fator_temp(iz, delta1, delta2):
+    return iz * math.sqrt(delta1/delta2) 
+
+def fator_alt(iz, h):
+    if h<1000:
+        iz = iz * 1
+    elif h>=1000 and h<2000:
+        iz = iz * 1
+    elif h>=2000 and h<3000:
+        iz = iz * 0.99
+    elif h>=3000 and h<4000:
+        iz = iz * 0.96    
+    else:
+        iz = iz * 0.9
+    return iz
 
 class cabolist:
     def __init__(self, id, material, section, perfil, conductors, maxcurrent, tabela, peso, inercia, w): 
@@ -88,17 +104,17 @@ class cabolist:
         
         if (self.material == 0) | (self.material == 1):
             self.custo = peso*4.20 #(peso/km)*preçoCU
-            self.alfa = 0.000017 #IMPORTANTE COLOCAR VALOR CERTO
+            self.alfa = 0.000017 
         if (self.material == 2) | (self.material == 3):
             self.custo = peso*2.75 #(peso/km)*preçoAL
-            self.alfa = 0.000022 #IMPORTANTE COLOCAR VALOR CERTO
+            self.alfa = 0.000022 
         self.E = 1.2 * 1000000
         L = meu_cabo.l*10
         self.fo = 112 * math.sqrt(10*(self.E*0.01*self.inercia*10000)/(self.peso*0.001*L*L*L*L))   
 db_cabo_list = []
 
 class cabo:
-    def __init__(self, U, Scc, S, Perf, Cond, Mat, a, t_cc, l, sigma): 
+    def __init__(self, U, Scc, S, Perf, Cond, Mat, a, t_cc, l, sigma, h, delta1): 
         self.U = U
         self.Scc = Scc 
         self.S = S
@@ -112,6 +128,10 @@ class cabo:
         self.X = 1.8
 
         self.Is = self.S / ( 1.732 * self.U )
+        delta2=35
+        self.Is = fator_temp(self.Is, delta1, delta2)
+        self.Is = fator_alt(self.Is, h)
+
         self.Icc = self.Scc / ( 1.732 * self.U )
         self.ich = self.X * 1.41421 * self.Icc * 0.93
         self.fe=2.04*0.01*(self.ich/1000)*(self.ich/1000)*(self.l*0.01)/(self.a*0.01)
@@ -128,7 +148,8 @@ class cabo:
         self.C=4.1868*93
         self.kLinha = self.e/(self.U*self.C)   #faltando
         
-meu_cabo = cabo(15000,500000000,1250000,5,1,1,35,0.5,180,1200)
+        
+meu_cabo = cabo(15000,500000000,1250000,5,1,1,35,0.5,180,1200,0,35)
 flag = 1 #IMPORTANTE MUDAR DEPOIS
 
 def show_cable(cable):
@@ -187,44 +208,40 @@ def caso():
     a = float(input('Qual a distancia entre fases: '))
     l = float(input('Qual o comprimento do vao: '))
     sigma = int(input('Qual a carga de seguranca a flexão: '))
-    temp  = cabo(U, Scc, S, Perf, Cond, Mat, a, t_cc, l, sigma) 
+    h =int(input('Qual a altitude: ')) 
+    delta1 =int(input('Qual a temperatura: ')) 
+  
     # Fim da entrada de dados
 
     # Fase 2 - bersão base - Contas regime permanente
-    delta2=35
-    teta1=1
-    teta2=1 #IMPORTANTE corrigir ar
-    h=0
-    permanente = int(input('Tem condições diferentes da padrao (1 se sim e 0 se não): '))
-    if permanente == 1:
-        h =int(input('Qual a altitude: ')) # colocar outras correções
-        delta1 =int(input('Qual a temperatura: ')) # colocar outras correções
-        temp.Is = fator_ar(temp.Is, delta1, delta2)
-        temp.Is = fator_temp(temp.Is, teta1, teta2)
-        temp.Is = fator_alt(temp.Is, h)
+    
+    temp  = cabo(U, Scc, S, Perf, Cond, Mat, a, t_cc, l, sigma, h, delta1) 
     global meu_cabo 
     global flag
     meu_cabo = temp
     flag = 1
 
-def fator_ar(iz, delta1, delta2):
-    return iz * math.sqrt(delta1/delta2) 
-
-def fator_temp(iz, teta1, teta2):
-    return iz * math.sqrt(teta1/teta2)
-
-def fator_alt(iz, h):
-    if h<1000:
-        iz = iz * 1
-    elif h>=1000 and h<2000:
-        iz = iz * 1
-    elif h>=2000 and h<3000:
-        iz = iz * 0.99
-    elif h>=3000 and h<4000:
-        iz = iz * 0.96    
-    else:
-        iz = iz * 0.9
-    return iz
+def sensibilidade():
+    global meu_cabo
+    print('Análise de sensibilidade')
+    varU = float(input('Variação do nível de tensão (%): '))
+    varScc = float(input('Variação da potência de cc (%): '))
+    varS = float(input('Variação da potência nominal (%): '))
+    varA = float(input('Variação da distância entre fases (%): '))
+    U = meu_cabo.U * (1 + varU / 100)
+    Scc = meu_cabo.Scc * (1 + varScc / 100)
+    S = meu_cabo.S * (1 + varS / 100)
+    a = meu_cabo.a * (1 + varA / 100)
+    meu_cabo_old = meu_cabo
+    meu_cabo = cabo(U, Scc, S, meu_cabo.Perf, meu_cabo.Cond, meu_cabo.Mat, a, meu_cabo.t_cc, meu_cabo.l, meu_cabo.sigma)
+    intro()
+    permanente()
+    cc()
+    flexao()
+    ressonancia()
+    custo()
+    esfTer()
+    meu_cabo = meu_cabo_old
 
 def custo():
     global chepest 
@@ -233,14 +250,11 @@ def custo():
     show_cable(chepest)
 
 def ressonancia():
-    #print(db_cabo_list[0].id)
     for elem in db_cabo_list:
-        #print("$$", db_cabo_list[i].fo)
-        #show_cable(db_cabo_list[i])
         if (elem.fo>45 and elem.fo<55) or (elem.fo>90 and elem.fo<110):
             db_cabo_list.remove(elem)
 
-    # the one with less section
+    #the one with less section
     smallest = min (db_cabo_list, key=lambda cabolist: cabolist.section)
 
     #Apresentação de resultado
@@ -408,11 +422,10 @@ def cc():
         n=0.6
     
     meu_cabo.m = m
-    meu_cabo.m = n
+    meu_cabo.n = n
     meu_cabo.Ith = meu_cabo.Icc * math.sqrt(meu_cabo.m+meu_cabo.n)
     Sec_min_cc =  meu_cabo.Ith*math.sqrt(meu_cabo.t_cc)/148
     for elem in db_cabo_list:
-        #print("## cabo:",db_cabo_list[i].section, "\t caso:",Sec_min_cc)
         if elem.section < Sec_min_cc:
             db_cabo_list.remove(elem)
     
@@ -426,7 +439,7 @@ def esfTer():
     global chepest
     meu_cabo.varTem = (meu_cabo.kLinha * (meu_cabo.Ith/chepest.section)*(meu_cabo.Ith/chepest.section)*meu_cabo.t_cc) + 45 #checar unidades
     chepest.F = chepest.section * (chepest.E*0.01) * chepest.alfa * meu_cabo.varTem
-    chepest.Fk = (3.14159*3.14159*chepest.E*chepest.inercia/(meu_cabo.l*meu_cabo.l)) #As unidades devem estar erradas
+    chepest.Fk = (3.14159*3.14159*chepest.E*chepest.inercia/(meu_cabo.l*meu_cabo.l)) 
     if chepest.F > chepest.Fk:
         chepest.F = (10*chepest.E*chepest.inercia)/(meu_cabo.l*(1+(chepest.alfa*meu_cabo.varTem))*meu_cabo.l*(1+(chepest.alfa*meu_cabo.varTem)))
     chepest.extremidade = math.sqrt((chepest.F*chepest.F)/4+(meu_cabo.fe*meu_cabo.fe)/4)
@@ -459,6 +472,8 @@ if __name__=='__main__':
             esfTer()
         elif option == 4:
             caso()
+        elif option == 5:
+            sensibilidade()
         else:
             print('Invalid option. Please enter a number between 1 and 4.')
 
