@@ -1,0 +1,6 @@
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "tkinter\__init__.pyc", line 1921, in __call__
+  File "ui.py", line 38, in calc
+  File "main.pyc", line 320, in permanente
+ValueError: min() arg is an empty sequence

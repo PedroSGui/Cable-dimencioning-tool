@@ -1,9 +1,5 @@
-from re import A, L
 import sqlite3
 import math
-import random
-import copy
-import time
 
 from sqlite3 import Error
 
@@ -16,7 +12,7 @@ def create_connection(path):
         print(f"The error '{e}' occurred")
     return connection
 
-connection = create_connection(".\sm_app.sqlite")
+connection = create_connection("sm_app.sqlite")
 
 def execute_query(connection, query):
     cursor = connection.cursor()
@@ -143,10 +139,10 @@ class cabo:
         if (self.Mat == 1) or (self.Mat == 0):
             self.e=(1/56)*(1+ (0.004*45))*0.001 
         if (self.Mat == 2) or (self.Mat == 3): #Isso muda pra Aluminio IMPORTANTE
-            self.e=(1/56)*(1+ (0.004*45))*0.001 #IMPORTANTE MUDAR DEPOIS
+            self.e=(1/34.2)*(1+ (0.004*45))*0.001 #IMPORTANTE MUDAR DEPOIS
         self.U=8.9*0.000001
         self.C=4.1868*93
-        self.kLinha = self.e/(self.U*self.C)   #faltando
+        self.kLinha = self.e/(self.U*self.C) 
         
         
 meu_cabo = cabo(15000,500000000,1250000,5,1,1,35,0.5,180,1200,0,35)
@@ -437,7 +433,7 @@ def cc():
 
 def esfTer():
     global chepest
-    meu_cabo.varTem = (meu_cabo.kLinha * (meu_cabo.Ith/chepest.section)*(meu_cabo.Ith/chepest.section)*meu_cabo.t_cc) + 45 #checar unidades
+    meu_cabo.varTem = (meu_cabo.kLinha * (meu_cabo.Ith/chepest.section)*(meu_cabo.Ith/chepest.section)*meu_cabo.t_cc) + 45 
     chepest.F = chepest.section * (chepest.E*0.01) * chepest.alfa * meu_cabo.varTem
     chepest.Fk = (3.14159*3.14159*chepest.E*chepest.inercia/(meu_cabo.l*meu_cabo.l)) 
     if chepest.F > chepest.Fk:
