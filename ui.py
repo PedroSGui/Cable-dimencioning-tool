@@ -1,6 +1,8 @@
 import sys
 from tkinter import *
 from main import *
+import sqlite3 
+import math
 
 class StdoutRedirector(object):
     def __init__(self,text_widget):
