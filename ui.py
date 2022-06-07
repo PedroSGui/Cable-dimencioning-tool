@@ -35,26 +35,31 @@ def root():
 
     def calc():
         global meu_cabo
+        print("\n\n\n\n-----------------------------------\n\n")
+        db_cabo_list = []
         meu_cabo = cabo(U.get(), Scc.get(), S.get(), Perf.get(), Cond.get(), Mat.get(), a.get(), t_cc.get(), l.get(), sigma.get(), h.get(), delta1.get())
-        intro()
-        permanente()
-        cc()
-        flexao()
-        ressonancia()
-        custo()
-        esfTer()
+        intro(meu_cabo,db_cabo_list)
+        permanente(meu_cabo,db_cabo_list)
+        cc(meu_cabo,db_cabo_list)
+        flexao(meu_cabo,db_cabo_list)
+        ressonancia(meu_cabo,db_cabo_list)
+        custo(meu_cabo,db_cabo_list)
+        esfTer(meu_cabo,db_cabo_list)
+
 
     def options(parent):
         frame = Frame(parent)
 
-        materialFrame = Frame(frame, padx=4)
+        materialFrame = Frame(frame, padx=1)
         materialFrame.pack(side=LEFT, anchor=N)
         Label(materialFrame, text="Material:").pack(side=TOP, anchor=NW)
         Radiobutton(materialFrame, text="Cobre", variable=Mat, value=0).pack(side=TOP, anchor=NW)
-        Radiobutton(materialFrame, text="Alumínio", variable=Mat, value=1).pack(side=TOP, anchor=NW)
-        Checkbutton(materialFrame, text="Pintado").pack(side=TOP, anchor=NW)
+        Radiobutton(materialFrame, text="Cobre pintado", variable=Mat, value=1).pack(side=TOP, anchor=NW)
+        Radiobutton(materialFrame, text="Alumínio", variable=Mat, value=2).pack(side=TOP, anchor=NW)
+        Radiobutton(materialFrame, text="Alumínio pintado", variable=Mat, value=3).pack(side=TOP, anchor=NW)
+        
 
-        profileFrame = Frame(frame, padx=4)
+        profileFrame = Frame(frame, padx=1)
         profileFrame.pack(side=LEFT, anchor=N)
         Label(profileFrame, text="Perfil:").pack(side=TOP, anchor=NW)
         Radiobutton(profileFrame, text="Circular", variable=Perf, value=1).pack(side=TOP, anchor=NW)
@@ -64,7 +69,7 @@ def root():
         Radiobutton(profileFrame, text="U Vertical", variable=Perf, value=5).pack(side=TOP, anchor=NW)
         Radiobutton(profileFrame, text="U Horizontal", variable=Perf, value=6).pack(side=TOP, anchor=NW)
 
-        numbers1Frame = Frame(frame, padx=5)
+        numbers1Frame = Frame(frame, padx=1)
         numbers1Frame.pack(side=LEFT, anchor=N)
         Label(numbers1Frame, text="Nível de tensão (V):").pack(side=TOP, anchor=NW)
         Entry(numbers1Frame, textvariable=U).pack(side=TOP, anchor=NW)
@@ -77,7 +82,7 @@ def root():
         Label(numbers1Frame, text="Altura em relação ao mar (metros):").pack(side=TOP, anchor=NW)
         Entry(numbers1Frame, textvariable=h).pack(side=TOP, anchor=NW)
 
-        numbers2Frame = Frame(frame, padx=5)
+        numbers2Frame = Frame(frame, padx=1)
         numbers2Frame.pack(side=LEFT, anchor=N)
         Label(numbers2Frame, text="Tempo de CC(segundos):").pack(side=TOP, anchor=NW)
         Entry(numbers2Frame, textvariable=t_cc).pack(side=TOP, anchor=NW)
@@ -111,12 +116,14 @@ def root():
 
         return frame
 
-    rootFrame = Frame(root, padx=8, pady=8)
+    rootFrame = Frame(root, padx=1, pady=1)
     rootFrame.pack()
 
-    options(rootFrame).pack(side=TOP, pady=4)
-    output(rootFrame).pack(side=TOP, pady=4)
-    buttons(rootFrame).pack(side=TOP, anchor=E, pady=4)
+    
+    options(rootFrame).pack(side=TOP, pady=0)
+    buttons(rootFrame).pack(side=TOP, pady=2)
+    output(rootFrame).pack(side=TOP, pady=0)
+    
 
     return root
 

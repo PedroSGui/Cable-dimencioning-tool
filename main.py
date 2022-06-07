@@ -85,7 +85,7 @@ def fator_alt(iz, h):
     return iz
 
 class cabolist:
-    def __init__(self, id, material, section, perfil, conductors, maxcurrent, tabela, peso, inercia, w): 
+    def __init__(self, id, material, section, perfil, conductors, maxcurrent, tabela, peso, inercia, w, meu_cabo): 
         self.id = id
         self.material = material
         self.section = section
@@ -98,10 +98,10 @@ class cabolist:
         self.w = w
         self.F=0
         
-        if (self.material == 0) | (self.material == 1):
+        if (self.material == 0) | (self.material == 2):
             self.custo = peso*4.20 #(peso/km)*preçoCU
             self.alfa = 0.000017 
-        if (self.material == 2) | (self.material == 3):
+        if (self.material == 1) | (self.material == 3):
             self.custo = peso*2.75 #(peso/km)*preçoAL
             self.alfa = 0.000022 
         self.E = 1.2 * 1000000
@@ -136,17 +136,17 @@ class cabo:
         self.m = 0
         self.n = 0
         self.varTem=0
-        if (self.Mat == 1) or (self.Mat == 0):
+        if (self.Mat == 0) or (self.Mat == 2):
             self.e=(1/56)*(1+ (0.004*45))*0.001 
-        if (self.Mat == 2) or (self.Mat == 3): #Isso muda pra Aluminio IMPORTANTE
+        if (self.Mat == 1) or (self.Mat == 3): #Isso muda pra Aluminio IMPORTANTE
             self.e=(1/34.2)*(1+ (0.004*45))*0.001 #IMPORTANTE MUDAR DEPOIS
         self.U=8.9*0.000001
         self.C=4.1868*93
         self.kLinha = self.e/(self.U*self.C) 
         
         
-meu_cabo = cabo(15000,500000000,1250000,5,1,1,35,0.5,180,1200,0,35)
-flag = 1 #IMPORTANTE MUDAR DEPOIS
+#meu_cabo = cabo(15000,500000000,1250000,5,1,1,35,0.5,180,1200,0,35)
+#flag = 1 #IMPORTANTE MUDAR DEPOIS
 
 def show_cable(cable):
     #Apresentação de resultado 
@@ -239,13 +239,13 @@ def sensibilidade():
     esfTer()
     meu_cabo = meu_cabo_old
 
-def custo():
+def custo(meu_cabo,db_cabo_list):
     global chepest 
     chepest = min (db_cabo_list, key=lambda cabolist: cabolist.custo)
     print("\n\nCUSTO:")
     show_cable(chepest)
 
-def ressonancia():
+def ressonancia(meu_cabo,db_cabo_list):
     for elem in db_cabo_list:
         if (elem.fo>45 and elem.fo<55) or (elem.fo>90 and elem.fo<110):
             db_cabo_list.remove(elem)
@@ -257,7 +257,7 @@ def ressonancia():
     print("\n\nRESSONANCIA:") 
     show_cable(smallest)
 
-def flexao():
+def flexao(meu_cabo,db_cabo_list):
     for elem in db_cabo_list:
         if (elem.w < ((meu_cabo.mf)/meu_cabo.sigma)):
             db_cabo_list.remove(elem)
@@ -277,11 +277,8 @@ def lerDB():
         print(cabos)
     print("\n\n")
 
-def intro():
-    if flag:
-        print('\n Definiu um cabo \n')
-    else:
-        caso()
+def intro(meu_cabo,db_cabo_list):
+    
 
     # search cables in database
     select_cabos = "SELECT * FROM cabos WHERE perfil = '"+ str(meu_cabo.Perf) +".0' AND material = '"+ str(meu_cabo.Mat) +".0'"
@@ -308,10 +305,11 @@ def intro():
         peso = float(word[7])
         inercia = float(word[8])
         w = float(word[9])
-        temp = cabolist(id, material, section, perfil, conductor, maxcurrent, tabela, peso, inercia, w)
-        db_cabo_list.append(temp)
+        temp = cabolist(id, material, section, perfil, conductor, maxcurrent, tabela, peso, inercia, w, meu_cabo)
+        if material == meu_cabo.Mat and perfil == meu_cabo.Perf:
+            db_cabo_list.append(temp)
 
-def permanente():
+def permanente(meu_cabo,db_cabo_list):
     for elem in db_cabo_list:
         if elem.maxcurrent < meu_cabo.Is:
             db_cabo_list.remove(elem)
@@ -326,12 +324,12 @@ def permanente():
     # Fim Contas regime permanente
     print("\n\n")
 
-def cc():
+def cc(meu_cabo,db_cabo_list):
     #Condição de CC
-    if (meu_cabo.Mat == 0) | (meu_cabo.Mat == 1):
+    if (meu_cabo.Mat == 0) | (meu_cabo.Mat == 2):
         #Cobre
         k_linha = 148
-    elif (meu_cabo.Mat == 2) | (meu_cabo.Mat == 3):
+    elif (meu_cabo.Mat == 1) | (meu_cabo.Mat == 3):
         #Aluminio
         k_linha = 76
     else:
@@ -431,7 +429,7 @@ def cc():
 
     # pra cada valor de db_cabo_list precisa ver se é maior do que a secção
 
-def esfTer():
+def esfTer(meu_cabo,db_cabo_list):
     global chepest
     meu_cabo.varTem = (meu_cabo.kLinha * (meu_cabo.Ith/chepest.section)*(meu_cabo.Ith/chepest.section)*meu_cabo.t_cc) + 45 
     chepest.F = chepest.section * (chepest.E*0.01) * chepest.alfa * meu_cabo.varTem
@@ -442,6 +440,7 @@ def esfTer():
     chepest.intermedio = meu_cabo.fe
     print("\n\nESFORÇO TERMICO:")
     show_cable(chepest)
+    
 
 
 if __name__=='__main__':
@@ -459,13 +458,14 @@ if __name__=='__main__':
         elif option == 2:
             lerDB()
         elif option == 3:
-            intro()
-            permanente()
-            cc()
-            flexao()
-            ressonancia()
-            custo()
-            esfTer()
+            print("_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_\n\n_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_\n\n")
+            intro(meu_cabo)
+            permanente(meu_cabo)
+            cc(meu_cabo)
+            flexao(meu_cabo)
+            ressonancia(meu_cabo)
+            custo(meu_cabo)
+            esfTer(meu_cabo)
         elif option == 4:
             caso()
         elif option == 5:
